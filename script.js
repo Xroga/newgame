@@ -3,657 +3,245 @@ on
   "html": "<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>XROGA Puzzle — Tile Match</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(145deg, #0b0e1a 0%, #1a1f2f 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 16px;
-            touch-action: manipulation;
-        }
-        #start-screen {
-            background: rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 48px;
-            padding: 48px 40px 56px;
-            max-width: 520px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            transition: transform 0.3s ease;
-        }
-        #start-screen:hover { transform: scale(1.01); }
-        .game-title {
-            font-size: clamp(2.8rem, 10vw, 4.8rem);
-            font-weight: 800;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #f7971e, #ffd200);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 4px 20px rgba(247, 151, 30, 0.3);
-            margin-bottom: 8px;
-            line-height: 1.1;
-        }
-        .game-subtitle {
-            font-size: clamp(1rem, 3vw, 1.3rem);
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 300;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            margin-bottom: 40px;
-        }
-        .tile-preview {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-        .mini-tile {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
-            transition: transform 0.2s ease;
-        }
-        .mini-tile:hover { transform: translateY(-4px) scale(1.05); }
-        .mini-tile:nth-child(1) { background: #ff6b6b; }
-        .mini-tile:nth-child(2) { background: #4ecdc4; }
-        .mini-tile:nth-child(3) { background: #ffe66d; }
-        .mini-tile:nth-child(4) { background: #a29bfe; }
-        .mini-tile:nth-child(5) { background: #fd79a8; }
-        .mini-tile:nth-child(6) { background: #00b894; }
-        .play-btn {
-            background: linear-gradient(135deg, #f7971e, #ffd200);
-            border: none;
-            padding: 18px 60px;
-            border-radius: 60px;
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #0b0e1a;
-            cursor: pointer;
-            letter-spacing: 2px;
-            box-shadow: 0 8px 30px rgba(247, 151, 30, 0.35);
-            transition: all 0.25s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .play-btn::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .play-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 12px 40px rgba(247, 151, 30, 0.5); }
-        .play-btn:hover::after { opacity: 1; }
-        .play-btn:active { transform: translateY(0px) scale(0.97); }
-        .start-hint {
-            margin-top: 32px;
-            color: rgba(255, 255, 255, 0.25);
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-        }
-        .start-hint span {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin: 0 4px;
-        }
-        #game-screen {
-            display: none;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 520px;
-            width: 100%;
-        }
-        #gameCanvas {
-            display: block;
-            margin: 0 auto;
-            border-radius: 16px;
-            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
-            background: #0f0f23;
-            width: 100%;
-            height: auto;
-            max-width: 500px;
-            touch-action: none;
-            cursor: pointer;
-        }
-        .info-panel {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            margin-top: 12px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            color: #e0e0ff;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-        .info-panel span {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .status-text { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
-        #game-over-screen {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        #game-over-screen.active { display: flex; }
-        .game-over-box {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 40px;
-            padding: 48px 40px;
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
-        }
-        .game-over-box h2 {
-            font-size: 2.8rem;
-            color: #ff6b6b;
-            margin-bottom: 8px;
-            letter-spacing: 2px;
-        }
-        .game-over-box p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            margin-bottom: 24px;
-        }
-        .game-over-box .final-score {
-            font-size: 3rem;
-            font-weight: 800;
-            color: #ffd700;
-            margin: 16px 0;
-        }
-        .restart-btn {
-            background: linear-gradient(135deg, #f7971e, #ffd200);
-            border: none;
-            padding: 16px 48px;
-            border-radius: 60px;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #0b0e1a;
-            cursor: pointer;
-            box-shadow: 0 8px 30px rgba(247, 151, 30, 0.35);
-            transition: all 0.25s ease;
-        }
-        .restart-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 12px 40px rgba(247, 151, 30, 0.5); }
-        @media (max-width: 520px) {
-            #start-screen { padding: 32px 20px 40px; border-radius: 32px; }
-            #game-screen { padding: 12px; border-radius: 16px; }
-            .mini-tile { width: 36px; height: 36px; }
-            .play-btn { padding: 16px 40px; font-size: 1.3rem; }
-            .info-panel { font-size: 14px; padding: 8px 12px; }
-            .game-over-box { padding: 32px 20px; }
-            .game-over-box h2 { font-size: 2rem; }
-        }
-        @media (max-width: 360px) {
-            .game-title { font-size: 2.2rem; }
-            .mini-tile { width: 28px; height: 28px; border-radius: 8px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XROGA Sliding Puzzle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background: #1a1a2e; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh;
+    color: #eee;
+  }
+  .game-container {
+    background: #16213e;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+  h1 { 
+    font-size: 2rem; 
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #e94560, #0f3460);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+    font-size: 1.1rem;
+  }
+  .grid {
+    display: grid;
+    gap: 4px;
+    margin: 1rem auto;
+    background: #0f3460;
+    padding: 4px;
+    border-radius: 8px;
+    width: fit-content;
+  }
+  .tile {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    background: #e94560;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .tile:hover { transform: scale(1.05); }
+  .tile.empty {
+    background: transparent;
+    cursor: default;
+  }
+  .tile.empty:hover { transform: none; }
+  .btn {
+    background: #e94560;
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0.5rem;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: #c73650; }
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .screen.active { display: flex; }
+  .win-message { font-size: 1.5rem; color: #4ecca3; }
+  @media (max-width: 500px) {
+    .tile { width: 60px; height: 60px; font-size: 1.3rem; }
+    .game-container { padding: 1rem; }
+  }
+</style>
 </head>
 <body>
-    <!-- START SCREEN -->
-    <div id="start-screen">
-        <h1 class="game-title">✨ TILE MATCH</h1>
-        <p class="game-subtitle">swap · match · score</p>
-        <div class="tile-preview">
-            <div class="mini-tile"></div>
-            <div class="mini-tile"></div>
-            <div class="mini-tile"></div>
-            <div class="mini-tile"></div>
-            <div class="mini-tile"></div>
-            <div class="mini-tile"></div>
-        </div>
-        <button class="play-btn" id="playBtn">▶ PLAY</button>
-        <p class="start-hint">
-            <span>🖱️ click</span> to swap · <span>🔗 3+ match</span> · <span>❤️ 3 lives</span>
-        </p>
+
+<div class="game-container">
+  <h1>🧩 Sliding Puzzle</h1>
+  
+  <div id="startScreen" class="screen active">
+    <p style="margin: 1rem 0;">Arrange tiles in order — empty space at bottom-right</p>
+    <button class="btn" onclick="startGame()">Play 3x3</button>
+    <button class="btn" onclick="startGame(4)">Play 4x4</button>
+  </div>
+
+  <div id="gameScreen" class="screen">
+    <div class="stats">
+      <span>Moves: <span id="moves">0</span></span>
+      <span>Time: <span id="timer">0</span>s</span>
     </div>
+    <div id="grid" class="grid"></div>
+    <button class="btn" onclick="startGame(currentSize)">🔄 New Game</button>
+  </div>
 
-    <!-- GAME SCREEN -->
-    <div id="game-screen">
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div class="info-panel">
-            <span>⭐ Score: <span id="scoreDisplay">0</span></span>
-            <span class="status-text" id="statusDisplay">🎮 Playing</span>
-            <span>❤️ <span id="livesDisplay">3</span></span>
-        </div>
-    </div>
+  <div id="winScreen" class="screen">
+    <div class="win-message">🎉 You Win!</div>
+    <p id="winStats"></p>
+    <button class="btn" onclick="startGame(currentSize)">Play Again</button>
+    <button class="btn" onclick="showScreen('startScreen')">Menu</button>
+  </div>
+</div>
 
-    <!-- GAME OVER SCREEN -->
-    <div id="game-over-screen">
-        <div class="game-over-box">
-            <h2>💔 GAME OVER</h2>
-            <p>Your final score</p>
-            <div class="final-score" id="finalScore">0</div>
-            <button class="restart-btn" id="restartBtn">🔄 PLAY AGAIN</button>
-        </div>
-    </div>
+<script>
+let grid = [];
+let size = 3;
+let emptyIndex = size * size - 1;
+let moves = 0;
+let timer = 0;
+let timerInterval = null;
+let isPlaying = false;
+let currentSize = 3;
 
-    <script>
-        // ============================================================
-        // XROGA Puzzle — Complete Match-3 Game
-        // All code in one file for beginner friendliness
-        // ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-        // ----- DOM ELEMENTS -----
-        const startScreen = document.getElementById('start-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const gameOverScreen = document.getElementById('game-over-screen');
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const livesDisplay = document.getElementById('livesDisplay');
-        const statusDisplay = document.getElementById('statusDisplay');
-        const finalScoreDisplay = document.getElementById('finalScore');
-        const playBtn = document.getElementById('playBtn');
-        const restartBtn = document.getElementById('restartBtn');
+function startGame(s = 3) {
+  if (timerInterval) clearInterval(timerInterval);
+  size = s;
+  currentSize = s;
+  emptyIndex = size * size - 1;
+  moves = 0;
+  timer = 0;
+  isPlaying = true;
+  
+  // Create solved grid
+  grid = Array.from({ length: size * size }, (_, i) => i + 1);
+  grid[grid.length - 1] = 0; // 0 = empty
+  
+  // Shuffle (perform random valid moves)
+  for (let i = 0; i < size * size * 10; i++) {
+    const neighbors = getNeighbors(emptyIndex);
+    const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+    swap(randomNeighbor, emptyIndex);
+  }
+  
+  document.getElementById('moves').textContent = '0';
+  document.getElementById('timer').textContent = '0';
+  renderGrid();
+  showScreen('gameScreen');
+  
+  timerInterval = setInterval(() => {
+    timer++;
+    document.getElementById('timer').textContent = timer;
+  }, 1000);
+}
 
-        // ----- GAME CONSTANTS -----
-        const GRID_SIZE = 8;
-        const TILE_SIZE = 50;
-        const NUM_TILE_TYPES = 6;
-        const TILE_COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8A5C', '#6C5CE7'];
-        const TILE_SYMBOLS = ['●', '■', '▲', '★', '♦', '♥'];
+function getNeighbors(index) {
+  const row = Math.floor(index / size);
+  const col = index % size;
+  const neighbors = [];
+  if (row > 0) neighbors.push(index - size);
+  if (row < size - 1) neighbors.push(index + size);
+  if (col > 0) neighbors.push(index - 1);
+  if (col < size - 1) neighbors.push(index + 1);
+  return neighbors;
+}
 
-        // ----- GAME STATE -----
-        let grid = [];
-        let score = 0;
-        let lives = 3;
-        let selectedTile = null; // { row, col }
-        let isProcessing = false;
-        let comboCount = 0;
+function swap(i, j) {
+  [grid[i], grid[j]] = [grid[j], grid[i]];
+  if (grid[i] === 0) emptyIndex = i;
+  if (grid[j] === 0) emptyIndex = j;
+}
 
-        // ============================================================
-        // 1. GRID GENERATION (no initial matches)
-        // ============================================================
-        function generateRandomTile() {
-            return Math.floor(Math.random() * NUM_TILE_TYPES);
-        }
+function handleTileClick(index) {
+  if (!isPlaying) return;
+  const neighbors = getNeighbors(emptyIndex);
+  if (neighbors.includes(index)) {
+    swap(index, emptyIndex);
+    moves++;
+    document.getElementById('moves').textContent = moves;
+    renderGrid();
+    checkWin();
+  }
+}
 
-        function hasInitialMatch(grid, row, col, tileType) {
-            let horizontalCount = 1;
-            for (let c = col - 1; c >= 0; c--) {
-                if (grid[row][c] === tileType) horizontalCount++;
-                else break;
-            }
-            if (horizontalCount >= 3) return true;
+function checkWin() {
+  for (let i = 0; i < grid.length - 1; i++) {
+    if (grid[i] !== i + 1) return;
+  }
+  if (grid[grid.length - 1] !== 0) return;
+  
+  isPlaying = false;
+  clearInterval(timerInterval);
+  document.getElementById('winStats').textContent = `Solved in ${moves} moves and ${timer} seconds!`;
+  showScreen('winScreen');
+}
 
-            let verticalCount = 1;
-            for (let r = row - 1; r >= 0; r--) {
-                if (grid[r][col] === tileType) verticalCount++;
-                else break;
-            }
-            if (verticalCount >= 3) return true;
+function renderGrid() {
+  const gridEl = document.getElementById('grid');
+  gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+  gridEl.innerHTML = '';
+  
+  grid.forEach((val, index) => {
+    const tile = document.createElement('div');
+    tile.className = 'tile' + (val === 0 ? ' empty' : '');
+    tile.textContent = val || '';
+    tile.addEventListener('click', () => handleTileClick(index));
+    gridEl.appendChild(tile);
+  });
+}
 
-            return false;
-        }
-
-        function generateGrid() {
-            grid = [];
-            for (let row = 0; row < GRID_SIZE; row++) {
-                grid[row] = [];
-                for (let col = 0; col < GRID_SIZE; col++) {
-                    let tileType;
-                    let attempts = 0;
-                    do {
-                        tileType = generateRandomTile();
-                        attempts++;
-                        if (attempts > 50) break;
-                    } while (hasInitialMatch(grid, row, col, tileType));
-                    grid[row][col] = tileType;
-                }
-            }
-        }
-
-        // ============================================================
-        // 2. DRAWING
-        // ============================================================
-        function drawGrid() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            for (let row = 0; row < GRID_SIZE; row++) {
-                for (let col = 0; col < GRID_SIZE; col++) {
-                    const tileType = grid[row][col];
-                    const x = col * TILE_SIZE;
-                    const y = row * TILE_SIZE;
-
-                    // Tile background
-                    ctx.fillStyle = TILE_COLORS[tileType];
-                    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-                    ctx.shadowBlur = 8;
-                    ctx.beginPath();
-                    ctx.roundRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4, 8);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-
-                    // Inner highlight
-                    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-                    ctx.beginPath();
-                    ctx.roundRect(x + 4, y + 4, TILE_SIZE - 8, TILE_SIZE - 8, 6);
-                    ctx.fill();
-
-                    // Symbol
-                    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-                    ctx.font = 'bold 24px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(TILE_SYMBOLS[tileType], x + TILE_SIZE/2, y + TILE_SIZE/2);
-
-                    // Selection highlight
-                    if (selectedTile && selectedTile.row === row && selectedTile.col === col) {
-                        ctx.strokeStyle = '#FFD700';
-                        ctx.lineWidth = 3;
-                        ctx.shadowColor = 'rgba(255,215,0,0.6)';
-                        ctx.shadowBlur = 12;
-                        ctx.beginPath();
-                        ctx.roundRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2, 10);
-                        ctx.stroke();
-                        ctx.shadowBlur = 0;
-                    }
-                }
-            }
-        }
-
-        // Helper for rounded rectangles
-        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-            if (w < 2 * r) r = w / 2;
-            if (h < 2 * r) r = h / 2;
-            this.moveTo(x + r, y);
-            this.lineTo(x + w - r, y);
-            this.quadraticCurveTo(x + w, y, x + w, y + r);
-            this.lineTo(x + w, y + h - r);
-            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-            this.lineTo(x + r, y + h);
-            this.quadraticCurveTo(x, y + h, x, y + h - r);
-            this.lineTo(x, y + r);
-            this.quadraticCurveTo(x, y, x + r, y);
-            this.closePath();
-            return this;
-        };
-
-        // ============================================================
-        // 3. MATCH DETECTION
-        // ============================================================
-        function findMatches() {
-            const matched = new Set();
-
-            // Horizontal matches
-            for (let row = 0; row < GRID_SIZE; row++) {
-                for (let col = 0; col < GRID_SIZE - 2; col++) {
-                    const type = grid[row][col];
-                    if (type === -1) continue;
-                    if (grid[row][col+1] === type && grid[row][col+2] === type) {
-                        let endCol = col + 2;
-                        while (endCol + 1 < GRID_SIZE && grid[row][endCol+1] === type) endCol++;
-                        for (let c = col; c <= endCol; c++) {
-                            matched.add(`${row},${c}`);
-                        }
-                        col = endCol;
-                    }
-                }
-            }
-
-            // Vertical matches
-            for (let col = 0; col < GRID_SIZE; col++) {
-                for (let row = 0; row < GRID_SIZE - 2; row++) {
-                    const type = grid[row][col];
-                    if (type === -1) continue;
-                    if (grid[row+1][col] === type && grid[row+2][col] === type) {
-                        let endRow = row + 2;
-                        while (endRow + 1 < GRID_SIZE && grid[endRow+1][col] === type) endRow++;
-                        for (let r = row; r <= endRow; r++) {
-                            matched.add(`${r},${col}`);
-                        }
-                        row = endRow;
-                    }
-                }
-            }
-
-            return matched;
-        }
-
-        // ============================================================
-        // 4. CASCADE (remove matches, drop tiles, fill new)
-        // ============================================================
-        function cascadeTiles(matchedSet) {
-            // Mark matched tiles as -1
-            for (const key of matchedSet) {
-                const [r, c] = key.split(',').map(Number);
-                grid[r][c] = -1;
-            }
-
-            // Drop tiles down
-            for (let col = 0; col < GRID_SIZE; col++) {
-                let writeRow = GRID_SIZE - 1;
-                for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                    if (grid[row][col] !== -1) {
-                        grid[writeRow][col] = grid[row][col];
-                        if (writeRow !== row) grid[row][col] = -1;
-                        writeRow--;
-                    }
-                }
-                // Fill empty spaces at top with new random tiles
-                for (let row = writeRow; row >= 0; row--) {
-                    grid[row][col] = generateRandomTile();
-                }
-            }
-        }
-
-        // ============================================================
-        // 5. SWAP LOGIC
-        // ============================================================
-        function isAdjacent(tile1, tile2) {
-            const rowDiff = Math.abs(tile1.row - tile2.row);
-            const colDiff = Math.abs(tile1.col - tile2.col);
-            return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
-        }
-
-        function swapTiles(tile1, tile2) {
-            const temp = grid[tile1.row][tile1.col];
-            grid[tile1.row][tile1.col] = grid[tile2.row][tile2.col];
-            grid[tile2.row][tile2.col] = temp;
-        }
-
-        function processSwap(tile1, tile2) {
-            if (isProcessing) return;
-            isProcessing = true;
-
-            swapTiles(tile1, tile2);
-            const matches = findMatches();
-
-            if (matches.size === 0) {
-                // Invalid swap — swap back and lose a life
-                swapTiles(tile1, tile2);
-                lives--;
-                updateUI();
-                if (lives <= 0) {
-                    gameOver();
-                    isProcessing = false;
-                    return;
-                }
-                statusDisplay.textContent = '❌ No match! -1 ❤️';
-                setTimeout(() => {
-                    statusDisplay.textContent = '🎮 Playing';
-                }, 800);
-                drawGrid();
-                isProcessing = false;
-                return;
-            }
-
-            // Valid swap — process matches
-            comboCount = 0;
-            processMatchesRecursive();
-        }
-
-        function processMatchesRecursive() {
-            const matches = findMatches();
-            if (matches.size === 0) {
-                isProcessing = false;
-                selectedTile = null;
-                updateUI();
-                drawGrid();
-                return;
-            }
-
-            comboCount++;
-            const points = matches.size * 10 * comboCount;
-            score += points;
-
-            // Show combo
-            if (comboCount > 1) {
-                statusDisplay.textContent = `🔥 ${comboCount}x COMBO! +${points}`;
-            } else {
-                statusDisplay.textContent = `✨ Match! +${points}`;
-            }
-
-            cascadeTiles(matches);
-            updateUI();
-            drawGrid();
-
-            // Check for chain reactions after a short delay
-            setTimeout(() => {
-                processMatchesRecursive();
-            }, 300);
-        }
-
-        // ============================================================
-        // 6. UI UPDATES
-        // ============================================================
-        function updateUI() {
-            scoreDisplay.textContent = score;
-            livesDisplay.textContent = lives;
-        }
-
-        // ============================================================
-        // 7. GAME OVER
-        // ============================================================
-        function gameOver() {
-            finalScoreDisplay.textContent = score;
-            gameOverScreen.classList.add('active');
-        }
-
-        // ============================================================
-        // 8. INPUT HANDLING
-        // ============================================================
-        function handleCanvasClick(e) {
-            if (isProcessing) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-                e.preventDefault();
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
-
-            const col = Math.floor(x / TILE_SIZE);
-            const row = Math.floor(y / TILE_SIZE);
-
-            if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return;
-
-            if (selectedTile === null) {
-                selectedTile = { row, col };
-                drawGrid();
-            } else {
-                if (selectedTile.row === row && selectedTile.col === col) {
-                    selectedTile = null;
-                    drawGrid();
-                    return;
-                }
-
-                if (isAdjacent(selectedTile, { row, col })) {
-                    processSwap(selectedTile, { row, col });
-                } else {
-                    selectedTile = { row, col };
-                    drawGrid();
-                }
-            }
-        }
-
-        // ============================================================
-        // 9. GAME INITIALIZATION
-        // ============================================================
-        function startGame() {
-            score = 0;
-            lives = 3;
-            selectedTile = null;
-            isProcessing = false;
-            comboCount = 0;
-            generateGrid();
-            updateUI();
-            statusDisplay.textContent = '🎮 Playing';
-            gameOverScreen.classList.remove('active');
-            startScreen.style.display = 'none';
-            gameScreen.style.display = 'block';
-            drawGrid();
-        }
-
-        // ----- EVENT LISTENERS -----
-        playBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', startGame);
-        canvas.addEventListener('click', handleCanvasClick);
-        canvas.addEventListener('touchstart', handleCanvasClick, { passive: false });
-
-        // Keyboard support
-        playBtn.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                startGame();
-            }
-        });
-        restartBtn.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                startGame();
-            }
-        });
-
-        // Initial draw (start screen visible)
-        console.log('✅ XROGA Puzzle loaded — click PLAY to start!');
-    </script>
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (!isPlaying) return;
+  const row = Math.floor(emptyIndex / size);
+  const col = emptyIndex % size;
+  let target = -1;
+  
+  switch(e.key) {
+    case 'ArrowUp': if (row < size - 1) target = emptyIndex + size; break;
+    case 'ArrowDown': if (row > 0) target = emptyIndex - size; break;
+    case 'ArrowLeft': if (col < size - 1) target = emptyIndex + 1; break;
+    case 'ArrowRight': if (col > 0) target = emptyIndex - 1; break;
+  }
+  
+  if (target >= 0) {
+    e.preventDefault();
+    handleTileClick(target);
+  }
+});
+</script>
 </body>
 </html>",
   "css": "",
